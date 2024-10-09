@@ -13,8 +13,8 @@ class Account:
         self.nonce = 0
         self.transactions = []
     
-    # GENERATE A KEY PAIR
-    # CALLS getPubKey() AND getPrivKey() METHODS
+    # GENERATE A KEY PAIR USING RSA
+    # CALLS getPubKey(), getPrivKey() AND getAddress() METHODS
     def generate(self):
         key = RSA.generate(2048)
         self.key = key
@@ -66,6 +66,8 @@ class Account:
 
     # SIGN A BALLOT WITH ACCOUNT PRIVATE KEY 
     def signBallot(self, ballotHash, ballotIdentifier, ballotName, ballotData, ballotAuthor):
+        
+        # RE-CREATE BALLOT HASH TO COMPARE TO HASH IN BALLOT OBJECT
         if ballotHash.digest() == SHA256.new(f"{ballotIdentifier}{ballotName}{ballotData}{ballotAuthor}".encode()).digest():
             sig = pkcs1_15.new(self.key).sign(ballotHash)
 
