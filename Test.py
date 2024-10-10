@@ -7,7 +7,8 @@ myAcct.generate()
 
 
 MyChain = Blockchain()
-print(MyChain.chain[0])
+genBlock = MyChain.chain[0]
+print(f"Block Nonce: {genBlock.nonce}\nBlock Index: {genBlock.index}\nTimestamp: {genBlock.timestamp}\nPrevious Block Hash: {genBlock.prevHash}\nData: {genBlock.data}")
 
 ballot = Ballot("Abortion", "yes or no", "2", myAcct)
 ballot.computeBallotHash()
@@ -19,4 +20,5 @@ sig = myAcct.transactions[0]
 newBlock = Block("1", MyChain.getLatestBlock(), sig, time.time(), 1)
 MyChain.addBlock(newBlock)
 
-print(MyChain.chain)
+recentBlock = MyChain.getLatestBlock()
+print(f"Block Nonce: {recentBlock.nonce}\nBlock Index: {recentBlock.index}\nTimestamp: {recentBlock.timestamp}\nPrevious Block Hash: {recentBlock.prevHash}\nData: {recentBlock.data}")
