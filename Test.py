@@ -1,6 +1,7 @@
-from BlockObjects import *
-from BallotObjects import *
-from AccountObjects import * 
+from Objects.BlockObjects import *
+from Objects.BallotObjects import *
+from Objects.AccountObjects import * 
+from Objects.TransactionObjects import *
 import unittest
 
 class Testing(unittest.TestCase):
@@ -28,12 +29,17 @@ class Testing(unittest.TestCase):
         ballot = Ballot("Abortion", "yes or no", "2", self.myAcct)
         ballot.computeBallotHash()
 
-        self.myAcct.signBallot(ballot.ballotHash, "2", "Abortion", "yes or no", self.myAcct.addr)
+        # CREATE A TRANSACTION OBJECT TO SIGN
+        tx = Transaction(self.myAcct, ballot, "yes")
+        tx.setupTx()
+        
+        # SIGN TX 
+        tx.signTx(self.myAcct)
 
         # CHECK THAT SIG WAS CREATED AND ADDED TO TX LIST
         self.assertEqual(len(self.myAcct.transactions), 1)
         sig = self.myAcct.transactions[0]
-        self.assertIsNotNone(sig)
+        self.assertIsNotNone(tx.txSig)
 
     # TEST PoW
     def testPoW(self):

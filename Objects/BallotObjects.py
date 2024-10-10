@@ -1,5 +1,5 @@
-from BlockObjects import *
-from AccountObjects import *
+from Objects.BlockObjects import *
+from Objects.AccountObjects import *
 from Crypto.Hash import SHA256
 
 class Ballot:
