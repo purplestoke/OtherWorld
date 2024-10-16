@@ -8,20 +8,21 @@ class Testing(unittest.TestCase):
     
     # SET UP ACCOUNT AND BLOCKCHAIN FOR EACH TEST
     def setUp(self):
+        # CREATE Account CLASS OBJECT THEN CALL generate() TO MAKE KEY PAIR & ADDRESS 
         self.myAcct = Account()
         self.myAcct.generate()
 
+        # CREATE A Blockchain OBJECT 
         self.myChain = Blockchain()
-        self.genBlock = self.myChain.chain[0]
-
+        self.genesisBlock = self.myChain.getBlockByIndex(0)
 
 
     # TEST PROPERTIES OF GENESIS BLOCK
     def testGenesisBlock(self):
-        self.assertEqual(self.genBlock.index, 0)
-        self.assertEqual(self.genBlock.prevHash, "0")
-        self.assertIsInstance(self.genBlock.nonce, int)
-        self.assertIsInstance(self.genBlock.timestamp, float)
+        self.assertEqual(self.genesisBlock.index, 0)
+        self.assertEqual(self.genesisBlock.prevHash, "0")
+        self.assertIsInstance(self.genesisBlock.nonce, int)
+        self.assertIsInstance(self.genesisBlock.timestamp, float)
 
 
     # TEST BALLOT CREATION AND SIGNING
@@ -38,8 +39,9 @@ class Testing(unittest.TestCase):
 
         # CHECK THAT SIG WAS CREATED AND ADDED TO TX LIST
         self.assertEqual(len(self.myAcct.transactions), 1)
-        sig = self.myAcct.transactions[0]
+        tx.txSig = self.myAcct.transactions[1]
         self.assertIsNotNone(tx.txSig)
+
 
     # TEST PoW
     def testPoW(self):
@@ -47,7 +49,7 @@ class Testing(unittest.TestCase):
         ballot.computeBallotHash()
 
         self.myAcct.signBallot(ballot.ballotHash, "2", "Abortion", "yes or no", self.myAcct.addr)
-        sig = self.myAcct.transactions[0]
+        sig = self.myAcct.transactions[self.myAcct.nonce]
         newBlock = Block("1", self.myChain.getLatestBlock(), sig, time.time(), 1)
 
         # CHECK INITAL HASH BEFORE PoW
