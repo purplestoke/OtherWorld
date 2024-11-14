@@ -1,6 +1,11 @@
 from pymerkle import InmemoryTree as MerkleTree
 import pickle
 
+"""
+READS THE BLOCKCHAIN STATE AND ORGANIZES THE INFORMATION IN A JSON FORMAT
+MUST HAVE A CONCISE SET OF RULES FOR CREATING ITSELF
+"""
+
 class Ledger:
     def __init__(self):
         self.txList = []

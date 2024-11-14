@@ -8,40 +8,29 @@ import time
 
 class Account:
     def __init__(self):
-        self.pubKey = None
-        self.privKey = None
-        self.key = None
+        self.__pub_key = None
+        self.__key = None
         self.addr = None
-        self.nonce = 0
-        self.transactions = {}
+        self.__nonce = 0
+        self.__transactions = {}
     
+    # FILLS IN CLASS VAR FIELDS
     def generate(self):
-        key = RSA.generate(2048)
-        self.key = key
-        self.pub_key = self.getPubKey()
-        self.priv_key = self.getPrivKey()
-        self.addr = self.getAddress()
-        self.transactions = {}
-        self.nonce = 0
+        self.__key = RSA.generate(2048)
+        self.__pub_key = self.__key.publickey().export_key()
+        self.addr = self.createAddress()
 
     def getPubKey(self):
-        if self.key:
-            return self.key.publickey().export_key()
-        else:
-            raise ValueError("Key not generated")
+        return self.__pub_key
 
-    def getPrivKey(self):
-        if self.key:
-            return self.key.export_key()
-        else:
-            raise ValueError("Key not generated")
-
-    def getAddress(self):
-        if not self.pub_key:
+    def createAddress(self):
+        if not self.__pub_key:
             raise ValueError("Public Key not generated")
-        
+        return self.encodeAddress(self.__pub_key)
+    
+    def encodeAddress(self, publicKey):
         # HASH PUBLIC KEY 
-        pubKeyHash = SHA256.new(self.pub_key).digest()
+        pubKeyHash = SHA256.new(publicKey).digest()
 
         # RIPEMD-160 ON PUBKEY HASH
         ripemd160 = hashlib.new('ripemd160')
@@ -63,31 +52,36 @@ class Account:
 
         return address.decode('utf-8')
 
+    def getNonce(self):
+        return self.__nonce
+    
+    def getTransactions(self):
+        return self.__transactions
+
     def incrementNonce(self):
-        self.nonce += 1
+        self.__nonce += 1
+
+    def decrementNonce(self):
+        self.__nonce -= 1
 
     def addTx(self, tx):
-        self.transactions[self.nonce] = tx
+        self.__transactions[self.__nonce] = tx
 
-    def generateVoteTransaction(self, ballot, vote):
-        self.tx = self.VoteTransaction(self.pub_key, ballot, vote)
-        self.tx.setupTx()
-
-    def signTx(self):
+    def signTx(self, tx_hash):
             # SIGN OFF ON TRANSACTION
-            signature = pkcs1_15.new(self.key).sign(self.tx.tx_hash)
-            if self.verifyTx() == True:
+            signature = pkcs1_15.new(self.__key).sign(tx_hash)
+            if self.verifyTx(tx_hash, signature):
                 return signature
-            else: return False
+            else: 
+                return False
                  
-    def verifyTx(self):
+    def verifyTx(self, tx_hash, signature):
         try:
-            pub_key_obj = RSA.import_key(self.pub_key)
-            pkcs1_15.new(pub_key_obj).verify(self.tx.tx_hash, self.tx.signature)
+            pub_key_obj = RSA.import_key(self.getPubKey())
+            pkcs1_15.new(pub_key_obj).verify(tx_hash, signature)
             return True
         except (ValueError,TypeError): 
             return False
-
 
     # TRANSACTION CLASS NESTED WITHIN ACCOUNT CLASS
     """
@@ -95,29 +89,35 @@ class Account:
     A TRANSACTIONS REMAINS INTERNAL. ie THE PRIVATE KEY STAYS WITHIN THE ACCOUNT.
     """
     class VoteTransaction:
-        def __init__(self, public_key, ballot: Ballot, vote):
-            self.public_key = public_key
+        def __init__(self, nonce, ballot: Ballot, vote):
+            self.nonce = nonce
             self.ballot = ballot
             self.vote = vote
-            self.signature = None
 
         def setupTx(self):
-            hash_str = f"{self.ballot.ballotHash}{self.vote}{self.account.nonce}{time.time()}".encode()
+            hash_str = f"{self.ballot.getBallotHash()}{self.vote}{self.nonce}{time.time()}".encode()
             self.tx_hash = SHA256.new(hash_str)
-
-        
+            return self.tx_hash.digest() != b''
+    
+    def createVoteTransactionObject(self, ballot, vote):
+        return self.VoteTransaction(self.__nonce, ballot, vote)
+   
     """
     METHOD WHICH CREATES AN INSTANCE OF THE TRANSACTION CLASS
     INCREMENTS THE ACCOUNT NONCE AND SIGNS OFF ON THE NEWLY CREATED TRANSACTION
     """
-    def createAndSignTx(self, ballot: Ballot, vote):
-        # INCREMENT ACCOUNT NONCE SO TX INDEX IS CORRECT WITHIN ACCOUNT DICT
+    def createAndSignTx(self, ballot, vote):
         self.incrementNonce()
-        self.tx = self.VoteTransaction(self.pub_key, ballot, vote)
-        self.tx.setupTx()
-        signature = self.signTx(self.tx)
-        if signature:
-            self.transactions[self.nonce] = signature 
+        # CREATE VOTE TX OBJ
+        vote_transaction_object = self.createVoteTransactionObject(ballot, vote)
+        if vote_transaction_object.setupTx():
+            signature = self.signTx(vote_transaction_object.tx_hash)
+            if signature:
+                self.addTx(signature)
+                return True
+        else:
+            self.decrementNonce()
+            return False 
         
 
         
