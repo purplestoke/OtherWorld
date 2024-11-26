@@ -1,5 +1,7 @@
 from Objects.BlockObjects import *
 from Crypto.Hash import SHA256
+from pymerkle import InmemoryTree as MerkleTree
+import fitz
 
 """
 HOLDS BALLOT DOCUMENT

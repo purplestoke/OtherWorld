@@ -51,6 +51,8 @@ class Block:
         data = self.getBlockData()
         block_dict = {"Block Hash": hsh, "Previous Block Hash": prev_hsh, "Nonce": nonce, "Data": data, "Timestamp": timestmp}
         return block_dict
+    
+    
 class Blockchain:
     def __init__(self):
         self.__chain = []

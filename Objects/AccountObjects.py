@@ -3,7 +3,7 @@ from Crypto.Hash import SHA256
 from Crypto.Signature import pkcs1_15
 import hashlib
 import base58
-from Objects.BallotObjects import Ballot
+from Objects.BallotObjects import Ballot   
 import time
 
 class Account:
